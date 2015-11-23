@@ -32,6 +32,10 @@ path and put this (or something similiar) in your .emacs file.
 
     (require 'markdown-dnd-images)
 
+## Notes ##
+
+Spaces in file names will be replaced with underscores.
+
 ## TODO ##
 
 Curretnly, this will supercede the normal drag and drop behavior in

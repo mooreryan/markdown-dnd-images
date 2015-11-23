@@ -5,6 +5,7 @@
 ;; Author: Ryan Moore <moorer@udel.edu>
 ;; Keywords: dnd, markdown, window, drag, drop
 ;; Created: 2015-11-18
+;; Last update: 2015-11-23
 ;; URL(en): https://github.com/mooreryan/markdown-dnd-images
 
 ;; markdown-dnd-images is free software: you can redistribute it and/or
@@ -59,6 +60,10 @@
 ;; path and put this (or something similiar) in your .emacs file.
 
 ;;     (require 'markdown-dnd-images)
+
+;; ## Notes ##
+
+;; Spaces in file names will be replaced with underscores.
 
 ;; ## TODO ##
 
@@ -271,6 +276,7 @@ happened."
 (defun dnd-insert-image-tag (text)
   (insert (format "![%s](%s)" text text)))
 
+;; slahes and spaces in the path are turned to _
 (defun img-dir-path ()
   (if (not buffer-file-name)
       (error (concat "ERROR: Couldn't find buffer-file-name "
@@ -278,7 +284,7 @@ happened."
   (file-name-as-directory
    (expand-file-name
     (concat "~/.emacs.d/markdown_image_files/images_for"
-            (replace-regexp-in-string "/" "_" buffer-file-name)))))
+            (replace-regexp-in-string "[/ ]+" "_" buffer-file-name)))))
 
 ;; returns name of dir created
 (defun try-mkdir (dir)
@@ -290,10 +296,14 @@ happened."
 ;; if new-fname already exists, it is overwritten
 ;; will copy any file so be careful not to copy a giant fasta file or
 ;;   something
+;; spaces in the file name are turned to "_"
 (defun cp-file-to-img-dir (fname)
   (try-mkdir (img-dir-path))
   (let* ((fname-base (file-name-nondirectory fname))
-         (new-fname (concat (img-dir-path) fname-base)))
+         (new-fname (concat (img-dir-path)
+                            (replace-regexp-in-string " +"
+                                                      "_"
+                                                      fname-base))))
     (if (file-exists-p new-fname)
         (delete-file new-fname))
     (if (file-exists-p fname)

@@ -269,7 +269,7 @@ happened."
                      "for current buffer")))
   (file-name-as-directory
    (expand-file-name
-    (concat "~/.emacs.d/markdown_images_for"
+    (concat "~/.emacs.d/markdown_image_files/images_for"
             (replace-regexp-in-string "/" "_" buffer-file-name)))))
 
 ;; returns name of dir created

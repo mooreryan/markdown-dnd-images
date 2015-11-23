@@ -7,7 +7,7 @@ current buffer and markdown-dnd-images will insert a markdown image
 tag for you as well as make a copy of whatever file and put it in a
 folder named like so
 
-    ~/.emacs.d/markdown_images_for_Users_moorer_Documents_test.md
+    ~/.emacs.d/markdown_image_files/images_for_Users_moorer_Documents_test.md/
 
 where the markdown file you are inserting into is named
 `/Users/moorer/Documents/test.md`

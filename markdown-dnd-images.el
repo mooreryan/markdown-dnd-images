@@ -57,7 +57,7 @@
 ;; To load...
 
 ;; Place this file `markdown-dnd-images.el` somewhere in your load
-;; path and put this (or something similiar) in your .emacs file.
+;; path and put this (or something similar) in your .emacs file.
 
 ;;     (require 'markdown-dnd-images)
 
@@ -67,7 +67,7 @@
 
 ;; ## TODO ##
 
-;; Curretnly, this will supercede the normal drag and drop behavior in
+;; Currently, this will supersede the normal drag and drop behavior in
 ;; all buffers. TODO: only for certain buffers?
 
 ;;; Code:
@@ -97,7 +97,7 @@ done (move, copy, link or private) if some action was made, or
 nil if the URL is ignored."
   :version "22.1"
   :type '(repeat (cons (regexp) (function)))
-  :group 'dnd)
+  :group 'markdown-dnd)
 
 
 (defcustom dnd-open-remote-file-function
@@ -115,17 +115,46 @@ uses `url-handler-mode' and is the default except for
 MS-Windows."
   :version "22.1"
   :type 'function
-  :group 'dnd)
-
+  :group 'markdown-dnd)
 
 (defcustom dnd-open-file-other-window nil
   "If non-nil, always use find-file-other-window to open dropped files."
   :version "22.1"
   :type 'boolean
-  :group 'dnd)
+  :group 'markdown-dnd)
 
+(defcustom dnd-save-directory "~/.emacs.d/markdown_image_files/images_for"
+  "Image save directory. Precede with ~ for home. Nothing for relative to buffer file."
+  :type '(string)
+  :group 'markdown-dnd)
+
+(defcustom dnd-save-buffer-name t
+      "Save with buffer-file-name"
+      :type 'boolean
+      :set (lambda (symbol value)
+             (set symbol value))
+      :group 'markdown-dnd)
+
+(defcustom dnd-view-inline nil
+    "View inline images on download."
+    :type 'boolean
+    :set (lambda (symbol value)
+           (set symbol value))
+    :group 'markdown-dnd)
+
+(defcustom dnd-capture-source nil
+    "Capture the image's source url."
+    :type 'boolean
+    :set (lambda (symbol value)
+           (set symbol value))
+    :group 'markdown-dnd)
 
 ;; Functions
+
+;; If images viewed inline, markdown-mode required.
+(if dnd-view-inline
+  (require 'markdown-mode)
+)
 
 ;; TODO update this one
 (defun dnd-handle-one-url (window action url)
@@ -272,22 +301,32 @@ happened."
 	  "The dropped text can be accessed with \\[yank]")))
     (insert text))
   action)
-
+            
 (defun dnd-insert-image-tag (text)
-  (insert (format "![%s](%s)" text text)))
+  (insert (format "![%s](%s)" text text ))
+  (if dnd-capture-source
+    (insert (format "\n\n\x2ASource: %s; Accessed: %s\x2A" url (current-time-string) ))
+  )
+  (if dnd-view-inline
+    (markdown-display-inline-images)
+  )
+  )
 
 ;; slahes and spaces in the path are turned to _
-(defun img-dir-path ()
+(defun markdown-img-dir-path ()
   (if (not buffer-file-name)
       (error (concat "ERROR: Couldn't find buffer-file-name "
                      "for current buffer")))
   (file-name-as-directory
    (expand-file-name
-    (concat "~/.emacs.d/markdown_image_files/images_for"
-            (replace-regexp-in-string "[/ ]+" "_" buffer-file-name)))))
+    (concat dnd-save-directory
+    (if dnd-save-buffer-name
+    (replace-regexp-in-string "[/ ]+" "_" buffer-file-name)
+    )   
+            ))))
 
 ;; returns name of dir created
-(defun try-mkdir (dir)
+(defun dnd-try-mkdir (dir)
   (unless (file-exists-p dir)
     (make-directory dir t))
   dir)
@@ -298,9 +337,9 @@ happened."
 ;;   something
 ;; spaces in the file name are turned to "_"
 (defun cp-file-to-img-dir (fname)
-  (try-mkdir (img-dir-path))
+  (dnd-try-mkdir (markdown-img-dir-path))
   (let* ((fname-base (file-name-nondirectory fname))
-         (new-fname (concat (img-dir-path)
+         (new-fname (concat (markdown-img-dir-path)
                             (replace-regexp-in-string " +"
                                                       "_"
                                                       fname-base))))
@@ -314,9 +353,9 @@ happened."
 ;; will try and download the file and put it in the img dir, if it
 ;; can't will just reference the file on the remote server
 (defun cp-remote-uri-to-img-dir (uri)
-  (try-mkdir (img-dir-path))
+  (dnd-try-mkdir (markdown-img-dir-path))
   (let* ((fname-base (file-name-nondirectory uri))
-         (new-fname (concat (img-dir-path) fname-base)))
+         (new-fname (concat (markdown-img-dir-path) fname-base)))
     (if (file-exists-p new-fname)
         (delete-file new-fname))
     ;; in case it cant copy for some reason
@@ -324,7 +363,8 @@ happened."
     (condition-case nil
         (url-copy-file uri new-fname)
       (setq new-fname uri))
-    new-fname))
+    new-fname)
+    )
 
 (provide 'markdown-dnd-images)
 
